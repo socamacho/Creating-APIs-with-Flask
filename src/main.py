@@ -13,20 +13,20 @@ from models import db, User
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-MIGRATE = Migrate(app, db)
-db.init_app(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING') #Para conectarme a la DB, arcivo env.example crea el enlace.
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #Cuando yo hago modificaciones en models.py, va a crear la migracion de la DB. 
+MIGRATE = Migrate(app, db) #Se lleva a cabo la migracion.
+db.init_app(app) #Se inicializa la app.
 CORS(app)
 setup_admin(app)
 
 # Handle/serialize errors like a JSON object
-@app.errorhandler(APIException)
+@app.errorhandler(APIException) #Ayuda a que los errores se ven mas bonitos (linea 24-26)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
-@app.route('/')
+@app.route('/')   #Este endpoint (lineas 29-31) ayudan a que cuanto no se agrega un domino al URL, aparezac Rigo bby.
 def sitemap():
     return generate_sitemap(app)
 
@@ -41,3 +41,10 @@ def handle_hello():
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
+
+
+user1 = Person.query.get(person_id)
+if user1 is None:
+   raise APIException('User not found', status_code=404)
+db.session.delete(user1)
+db.session.commit()
