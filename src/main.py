@@ -8,11 +8,12 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Person
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 #from models import Person
 
-app = Flask(__name__)
-app.url_map.strict_slashes = False
+app = Flask(__name__)#Creo nueva instancia del servidor Flask
+app.url_map.strict_slashes = False #DUDA: Que significa?
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING') #Para conectarme a la DB, arcivo env.example crea el enlace.
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False #Cuando yo hago modificaciones en models.py, va a crear la migracion de la DB. 
 MIGRATE = Migrate(app, db) #Se lleva a cabo la migracion.
@@ -21,7 +22,7 @@ CORS(app)
 setup_admin(app)
 
 # Handle/serialize errors like a JSON object
-@app.errorhandler(APIException) #Ayuda a que los errores se ven mas bonitos (linea 24-26)
+@app.errorhandler(APIException) #Ayuda a que los errores se ven mas bonitos (linea 25-27)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
