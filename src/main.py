@@ -9,8 +9,10 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User
-#from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
+#JWT-SECURITY
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+import datetime
 
 app = Flask(__name__)#Creo nueva instancia del servidor Flask
 app.url_map.strict_slashes = False #DUDA: Que significa?
@@ -48,9 +50,9 @@ def Get_Users_Info(): #Cuando el cliente realizada el request, esta llamando est
 @app.route('/user/<int:id>', methods=['GET'])
 def Deploy_User_Info(id): #Coloco de parametro el id porque es la forma de identificar un UNICO user.
     user = User.query.filter_by(id = id).first()#Otra forma de hacerlo seria User.query.get(id)//El first es para evitar obtener info DUPLICADA.NO es buena practica ya que puede buscarse info generalizada.
-    if user is None: #None quiere decir si no existe?
+    if user is None: 
         raise APIException("Message: No se encontro el user",status_code=404)
-    request = user.serialize() #De lo contrario, muestre los datos del user?
+    request = user.serialize() 
     return jsonify(request), 200
 
 
@@ -62,7 +64,7 @@ def Create_Users():
     username = request.json.get("username", None)
     email = request.json.get("email", None)
     password = request.json.get("password",None)#El None ES por si no tengo un dado, sale NONE.
-     #El request.get_json() donde esta? Es algo reservado?
+
     #hashed_password = generate_password_hash(data["password"], method='sha256')
     #user1 = User(is_active=data['is_active'],username=data['username'],email=data['email'],password=data['password'])
     user1 = User(is_active = is_active, username= username, email=email, password=password)
