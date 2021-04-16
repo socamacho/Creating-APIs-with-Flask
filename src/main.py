@@ -8,9 +8,9 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User, Person
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-#from models import Person
+from models import db, User
+#from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+
 
 app = Flask(__name__)#Creo nueva instancia del servidor Flask
 app.url_map.strict_slashes = False #DUDA: Que significa?
@@ -23,8 +23,8 @@ setup_admin(app)#DUDA: Maneja la funcionalidad de la app por medio de flask.
 
 
 #Set up the FLASK-JWT-Extended extension  
-app.config["JWT_SECRET_KEY"] = "super-secret"
-jwt = JWTManager(app)
+#app.config["JWT_SECRET_KEY"] = "super-secret"
+#jwt = JWTManager(app)
 
 
 # Handle/serialize errors like a JSON object
@@ -58,9 +58,14 @@ def Deploy_User_Info(id): #Coloco de parametro el id porque es la forma de ident
 
 @app.route('/user', methods= ['POST'])
 def Create_Users():
-    data = request.get_json() #El request.get_json() donde esta? Es algo reservado?
+    is_active = request.json.get("is_active", True) #Solo este CON TRUE por ser boolean. 
+    username = request.json.get("username", None)
+    email = request.json.get("email", None)
+    password = request.json.get("password",None)#El None ES por si no tengo un dado, sale NONE.
+     #El request.get_json() donde esta? Es algo reservado?
     #hashed_password = generate_password_hash(data["password"], method='sha256')
-    user1 = User(username=data['username'],email=data['email'],password=data['password'])
+    #user1 = User(is_active=data['is_active'],username=data['username'],email=data['email'],password=data['password'])
+    user1 = User(is_active = is_active, username= username, email=email, password=password)
     db.session.add(user1) #Agrega el user
     db.session.commit()#Sube User1 a la DB.
     return jsonify("Message: Se adiciono un usuario!",200)
@@ -69,15 +74,15 @@ def Create_Users():
 #-----------METODO DELETE---------------------------------------------------->
 
 @app.route('/user/<id>', methods=["DELETE"])
-@jwt_required()
+#@jwt_required()
 def Delete_Users(id):
-    current_user = get_jwt_identity() #Este get_jwt_identity() fue importado.
-    user1= User.query.filter_by(id=id),first()
+    #current_user = get_jwt_identity() #Este get_jwt_identity() fue importado.
+    user1= User.query.filter_by(id=id).first()
     if user1 is None:
         raise APIException("Usuario no existe!",status_code=404)
     db.session.delete(user1)
     db.session.commit()
-    return jsonify({"Proceso realizado con exito por el usuario:" : current_user}),200
+    return jsonify({"Proceso realizado con exito por el usuario:" : user1.serialize()}),200
 
 
 
@@ -92,8 +97,8 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=PORT, debug=False)
 
 
-user1 = Person.query.get(person_id)
+"""user1 = Person.query.get(person_id)
 if user1 is None:
    raise APIException('User not found', status_code=404)
 db.session.delete(user1)
-db.session.commit()
+db.session.commit()"""
