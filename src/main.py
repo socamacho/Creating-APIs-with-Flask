@@ -25,8 +25,8 @@ setup_admin(app)#DUDA: Maneja la funcionalidad de la app por medio de flask.
 
 
 #Set up the FLASK-JWT-Extended extension  
-#app.config["JWT_SECRET_KEY"] = "super-secret"
-#jwt = JWTManager(app)
+app.config["JWT_SECRET_KEY"] = "super-secret"
+jwt = JWTManager(app)
 
 
 # Handle/serialize errors like a JSON object
@@ -35,10 +35,44 @@ def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
-@app.route('/')   #Este endpoint (lineas 29-31) ayudan a que cuanto no se agrega un dominio al URL, aparezca Rigo bby. Codigo linea 30, CREA una ruta adicionalmente, 
-              #especifica que el endpoint va a estar disponible de ahora en adelante. Aqui se esta aplicando metodo GET.
+@app.route('/')   #Este endpoint (lineas 29-31) ayudan a que cuanto no se agrega un dominio al URL, aparezca Rigo bby. Codigo linea 30, CREA una ruta adicionalmente, #especifica que el endpoint va a estar disponible de ahora en adelante. Aqui se esta aplicando metodo GET.
 def sitemap():
     return generate_sitemap(app)
+
+
+#----------LOGIN----------------------------------------------------------->
+@app.route('/', methods=["POST"])
+def login():
+    if request.method == "POST":
+        username = request.json["username"] 
+        password = request.json["password"]
+
+#--------Validacion------------------------------------------------------->
+
+        if not username:
+            return jsonify({"error":"username Invalid"}),400
+        if not password:
+            return jsonify({"error":"password Invalid"}),400
+
+        #if not check_password_hash(user.password,password):
+        #   return jsonify({"error":"Wrong password"}),400
+
+
+        #Create Access Token
+        expiration_date = datetime.timedelta(days=1)
+        #expiration_date = datetime.timedelta(minutes=1)
+        access_token = create_access_token(identity=username, expires_delta=expiration_date)
+
+        request_body = {
+            "username":user.serialize(),
+            "token": access_token
+        }
+
+        return jsonify(request_body),200
+
+
+
+
 #----------------------------------EVERYTHING related to the USER------------------------------------------------------------------------------------------------------
 @app.route('/user', methods=['GET']) 
 def Get_Users_Info(): #Cuando el cliente realizada el request, esta llamando este metodo.
@@ -76,19 +110,15 @@ def Create_Users():
 #-----------METODO DELETE---------------------------------------------------->
 
 @app.route('/user/<id>', methods=["DELETE"])
-#@jwt_required()
+@jwt_required()
 def Delete_Users(id):
-    #current_user = get_jwt_identity() #Este get_jwt_identity() fue importado.
+    current_user = get_jwt_identity() #Este get_jwt_identity() fue importado.
     user1= User.query.filter_by(id=id).first()
     if user1 is None:
         raise APIException("Usuario no existe!",status_code=404)
     db.session.delete(user1)
     db.session.commit()
-    return jsonify({"Proceso realizado con exito por el usuario:" : user1.serialize()}),200
-
-
-
-
+    return jsonify({"Proceso realizado con exito por el usuario:" : current_user()}),200
 
 
 
@@ -98,9 +128,3 @@ if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
 
-
-"""user1 = Person.query.get(person_id)
-if user1 is None:
-   raise APIException('User not found', status_code=404)
-db.session.delete(user1)
-db.session.commit()"""
