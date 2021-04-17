@@ -25,7 +25,7 @@ setup_admin(app)#DUDA: Maneja la funcionalidad de la app por medio de flask.
 
 
 #Set up the FLASK-JWT-Extended extension  
-app.config["JWT_SECRET_KEY"] = "super-secret"
+app.config["JWT_SECRET_KEY"] = os.environ.get('JWT_SECRET_KEY') #Esta app es la de la linea 17. JWT_SECRET_KEY es una variable de entorno que se guarda en el .env file, para leerla utilizo
 jwt = JWTManager(app)
 
 
@@ -44,7 +44,7 @@ def sitemap():
 @app.route('/', methods=["POST"])
 def login():
     if request.method == "POST":
-        username = request.json["username"] 
+        username = request.json["username"] #El request viene de la importacion linea 5. Y es .json pq es lo que nos va a generar la solicitud.
         password = request.json["password"]
 
 #--------Validacion------------------------------------------------------->
@@ -61,7 +61,7 @@ def login():
         #Create Access Token
         expiration_date = datetime.timedelta(days=1)
         #expiration_date = datetime.timedelta(minutes=1)
-        access_token = create_access_token(identity=username, expires_delta=expiration_date)
+        access_token = create_access_token(identity=username, expires_delta=expiration_date) #En JWT debugger, el identity seria el SUB.
 
         request_body = {
             "username":user.serialize(),
