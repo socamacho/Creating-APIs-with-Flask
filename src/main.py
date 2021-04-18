@@ -41,11 +41,11 @@ def sitemap():
 
 
 #----------LOGIN----------------------------------------------------------->
-@app.route('/', methods=["POST"])
+@app.route('/login', methods=["POST"])
 def login():
     if request.method == "POST":
-        username = request.json["username"] #El request viene de la importacion linea 5. Y es .json pq es lo que nos va a generar la solicitud.
-        password = request.json["password"]
+        username = request.json.get("username",None) #El request viene de la importacion linea 5. Y es .json pq es lo que nos va a generar la solicitud.
+        password = request.json.get("password",None)
 
 #--------Validacion------------------------------------------------------->
 
@@ -56,15 +56,19 @@ def login():
 
         #if not check_password_hash(user.password,password):
         #   return jsonify({"error":"Wrong password"}),400
+        user = User.query.filter_by(username=username, password=password).first()
+        
+        if not user:
+            return jsonify("Username/Password are incorrect"),401
 
 
         #Create Access Token
         expiration_date = datetime.timedelta(days=1)
         #expiration_date = datetime.timedelta(minutes=1)
-        access_token = create_access_token(identity=username, expires_delta=expiration_date) #En JWT debugger, el identity seria el SUB.
+        access_token = create_access_token(identity=user.username, expires_delta=expiration_date) #En JWT debugger, el identity seria el SUB.
 
         request_body = {
-            "username":user.serialize(),
+            #"username":User.serialize(),
             "token": access_token
         }
 
